@@ -66,9 +66,6 @@ export type OverviewSectionProps = {
   data: OverviewDashboardData | null;
   meta?: DashboardOverviewMeta | null;
   loading: boolean;
-  platformRevenueBreakdown?: Array<{ name: string; value: number }>;
-  platformRevenueLoading?: boolean;
-  platformRevenueError?: string | null;
 
   // UI/Theme Props
   themePanelClass: string;
@@ -83,7 +80,6 @@ export type OverviewSectionProps = {
   FunnelVisualizer: React.ComponentType<any>;
   ConversionPlatformBars: React.ComponentType<any>;
   LtvComparisonChart: React.ComponentType<any>;
-  PlatformPieChart?: React.ComponentType<any>;
 
   // Interaction Handlers
   compareMode: 'previous' | 'target';
@@ -108,9 +104,6 @@ const OverviewSection: React.FC<OverviewSectionProps> = ({
   data,
   meta,
   loading,
-  platformRevenueBreakdown,
-  platformRevenueLoading,
-  platformRevenueError,
   IntegrationChecklistWidget,
   ConnectionsInProgressWidget,
   overviewSectionRefs,
@@ -131,7 +124,6 @@ const OverviewSection: React.FC<OverviewSectionProps> = ({
   conversionConnectionStatus,
   ConversionPlatformBars,
   LtvComparisonChart,
-  PlatformPieChart,
 }) => {
 
   const ChecklistWidget = IntegrationChecklistWidget || ConnectionsInProgressWidget;
@@ -233,7 +225,7 @@ const OverviewSection: React.FC<OverviewSectionProps> = ({
         </div>
 
         {/* 1. Real-Time Analytics */}
-        <div className={`${themePanelClass} shadow-sm hover:shadow-md transition-shadow duration-300 p-6 rounded-xl`}>
+        <div className={`${themePanelClass} shadow-sm hover:shadow-md transition-shadow duration-300 p-6 rounded-xl`}> 
           <div className="flex items-center justify-between mb-6">
             <div>
               <h3 className="text-xl font-semibold tracking-tight theme-text">Real-Time Analytics</h3>
@@ -271,25 +263,6 @@ const OverviewSection: React.FC<OverviewSectionProps> = ({
               </p>
             </div>
           </div>
-        </div>
-
-        <div className={`${themePanelClass} shadow-sm hover:shadow-md transition-shadow duration-300 p-6 rounded-xl mt-8`}>
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h3 className="text-xl font-semibold tracking-tight theme-text">Revenue Share by Platform</h3>
-              <p className="text-sm text-gray-500 mt-1">Platform mix based on revenue</p>
-            </div>
-          </div>
-
-          {platformRevenueLoading ? (
-            <div className="py-12 text-center text-sm theme-muted">Loading...</div>
-          ) : platformRevenueError ? (
-            <div className="py-12 text-center text-sm text-rose-500">{platformRevenueError}</div>
-          ) : PlatformPieChart && Array.isArray(platformRevenueBreakdown) && platformRevenueBreakdown.length > 0 ? (
-            <PlatformPieChart data={platformRevenueBreakdown} title="Revenue Share" />
-          ) : (
-            <div className="py-12 text-center text-sm theme-muted">No platform revenue data</div>
-          )}
         </div>
 
         {/* 2. Key Metrics Cards (AI Summaries) */}

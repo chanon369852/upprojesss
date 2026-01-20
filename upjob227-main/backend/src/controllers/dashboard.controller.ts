@@ -77,130 +77,140 @@ const colorByPlatform: Record<string, string> = {
   ga4: '#F9AB00',
 };
 
+const buildEmptyOverviewResponse = (input: {
+  label: string;
+  start: Date;
+  end: Date;
+  prevStart: Date;
+  prevEnd: Date;
+  days: number;
+}) => {
+  const { label, start, end, prevStart, prevEnd, days } = input;
+
+  const ltvCacTrend: Array<{ name: string; ltv: number; cac: number }> = [];
+  const weeks = 4;
+  for (let i = weeks - 1; i >= 0; i -= 1) {
+    const weekEnd = startOfDay(addDays(end, -i * 7));
+    ltvCacTrend.push({
+      name: weekEnd.toISOString().slice(0, 10),
+      ltv: 0,
+      cac: 0,
+    });
+  }
+
+  return {
+    success: true,
+    data: {
+      realtimeMessages: [
+        { id: 'impressions', label: 'Impressions', value: '—', delta: '—', deltaTarget: '—', positive: true },
+        { id: 'clicks', label: 'Clicks', value: '—', delta: '—', deltaTarget: '—', positive: true },
+        { id: 'conversions', label: 'Conversions', value: '—', delta: '—', deltaTarget: '—', positive: true },
+        { id: 'revenue', label: 'Revenue', value: '—', delta: '—', deltaTarget: '—', positive: true },
+      ],
+      aiSummaries: [
+        {
+          id: 'cpm',
+          label: 'CPM',
+          value: '—',
+          delta: '—',
+          positive: true,
+          periodLabel: 'From last period',
+          accentColor: 'blue',
+        },
+        {
+          id: 'ctr',
+          label: 'CTR',
+          value: '—',
+          delta: '—',
+          positive: true,
+          periodLabel: 'From last period',
+          accentColor: 'emerald',
+        },
+        {
+          id: 'roas',
+          label: 'ROAS',
+          value: '—',
+          delta: '—',
+          positive: true,
+          periodLabel: 'From last period',
+          accentColor: 'purple',
+        },
+        {
+          id: 'roi',
+          label: 'ROI',
+          value: '—',
+          delta: '—',
+          positive: true,
+          periodLabel: 'From last period',
+          accentColor: 'orange',
+        },
+      ],
+      financial: {
+        revenue: 0,
+        revenueChange: '—',
+        profit: 0,
+        profitChange: '—',
+        cost: 0,
+        costChange: '—',
+        roi: '—',
+        roiChange: '—',
+        breakdown: [
+          { name: 'GOOGLE', value: 0, color: '#EA4335' },
+          { name: 'FACEBOOK', value: 0, color: '#1877F2' },
+          { name: 'OTHER', value: 0, color: '#94a3b8' },
+        ],
+        details: [
+          { label: 'Total Revenue', value: 0, delta: '—', accent: 'rgba(16,185,129,0.7)' },
+          { label: 'Total Profit', value: 0, delta: '—', accent: 'rgba(96,165,250,0.7)' },
+          { label: 'Total Cost', value: 0, delta: '—', accent: 'rgba(248,113,113,0.7)' },
+        ],
+      },
+      conversionFunnel: [
+        { label: 'Impressions', value: 0, color: '#f97316' },
+        { label: 'Clicks', value: 0, color: '#fb923c' },
+        { label: 'Conversions', value: 0, color: '#facc15' },
+        { label: 'Revenue', value: 0, color: '#22c55e' },
+      ],
+      activeCampaigns: [],
+      conversionPlatforms: [],
+      ltvCac: {
+        currentRatio: 0,
+        movement: '—',
+        movementLabel: 'vs last month',
+        avgLtv: 0,
+        avgCac: 0,
+        trend: ltvCacTrend,
+      },
+    },
+    meta: {
+      range: label,
+      start: start.toISOString(),
+      end: end.toISOString(),
+      compareStart: prevStart.toISOString(),
+      compareEnd: prevEnd.toISOString(),
+      days,
+      provenance: {
+        source: { table: 'metrics' },
+        currentRange: { start: start.toISOString(), end: end.toISOString(), label },
+        dataRange: { minDate: null, maxDate: null },
+        lastUpdatedAt: null,
+        perPlatform: [],
+      },
+    },
+  };
+};
+
 export const getDashboardOverview = async (req: TenantRequest, res: Response) => {
   const { range } = req.query as any;
   const { start, end, days, label } = parseRange(typeof range === 'string' ? range : undefined);
 
-  if (String(req.userRole || '').toLowerCase() === 'admintest') {
-    const prevEnd = addDays(start, -1);
-    const prevStart = addDays(start, -days);
-
-    const ltvCacTrend: Array<{ name: string; ltv: number; cac: number }> = [];
-    const weeks = 4;
-    for (let i = weeks - 1; i >= 0; i -= 1) {
-      const weekEnd = startOfDay(addDays(end, -i * 7));
-      ltvCacTrend.push({
-        name: weekEnd.toISOString().slice(0, 10),
-        ltv: 0,
-        cac: 0,
-      });
-    }
-
-    res.json({
-      success: true,
-      data: {
-        realtimeMessages: [
-          { id: 'impressions', label: 'Impressions', value: 0, delta: '—', deltaTarget: '—', positive: true },
-          { id: 'clicks', label: 'Clicks', value: 0, delta: '—', deltaTarget: '—', positive: true },
-          { id: 'conversions', label: 'Conversions', value: 0, delta: '—', deltaTarget: '—', positive: true },
-          { id: 'revenue', label: 'Revenue', value: 0, delta: '—', deltaTarget: '—', positive: true },
-        ],
-        aiSummaries: [
-          {
-            id: 'cpm',
-            label: 'CPM',
-            value: '0.00',
-            delta: '—',
-            positive: true,
-            periodLabel: 'From last period',
-            accentColor: 'blue',
-          },
-          {
-            id: 'ctr',
-            label: 'CTR',
-            value: '0.00%',
-            delta: '—',
-            positive: true,
-            periodLabel: 'From last period',
-            accentColor: 'emerald',
-          },
-          {
-            id: 'roas',
-            label: 'ROAS',
-            value: '0.00x',
-            delta: '—',
-            positive: true,
-            periodLabel: 'From last period',
-            accentColor: 'purple',
-          },
-          {
-            id: 'roi',
-            label: 'ROI',
-            value: '0.0%',
-            delta: '—',
-            positive: true,
-            periodLabel: 'From last period',
-            accentColor: 'orange',
-          },
-        ],
-        financial: {
-          revenue: 0,
-          revenueChange: '—',
-          profit: 0,
-          profitChange: '—',
-          cost: 0,
-          costChange: '—',
-          roi: '0.0%',
-          roiChange: '—',
-          breakdown: [
-            { name: 'GOOGLE', value: 0, color: '#EA4335' },
-            { name: 'FACEBOOK', value: 0, color: '#1877F2' },
-            { name: 'OTHER', value: 0, color: '#94a3b8' },
-          ],
-          details: [
-            { label: 'Total Revenue', value: 0, delta: '—', accent: 'rgba(16,185,129,0.7)' },
-            { label: 'Total Profit', value: 0, delta: '—', accent: 'rgba(96,165,250,0.7)' },
-            { label: 'Total Cost', value: 0, delta: '—', accent: 'rgba(248,113,113,0.7)' },
-          ],
-        },
-        conversionFunnel: [
-          { label: 'Impressions', value: 0, color: '#f97316' },
-          { label: 'Clicks', value: 0, color: '#fb923c' },
-          { label: 'Conversions', value: 0, color: '#facc15' },
-          { label: 'Revenue', value: 0, color: '#22c55e' },
-        ],
-        activeCampaigns: [],
-        conversionPlatforms: [],
-        ltvCac: {
-          currentRatio: 0,
-          movement: '—',
-          movementLabel: 'vs last month',
-          avgLtv: 0,
-          avgCac: 0,
-          trend: ltvCacTrend,
-        },
-      },
-      meta: {
-        range: label,
-        start: start.toISOString(),
-        end: end.toISOString(),
-        compareStart: prevStart.toISOString(),
-        compareEnd: prevEnd.toISOString(),
-        days,
-        provenance: {
-          source: { table: 'metrics' },
-          currentRange: { start: start.toISOString(), end: end.toISOString(), label },
-          dataRange: { minDate: null, maxDate: null },
-          lastUpdatedAt: null,
-          perPlatform: [],
-        },
-      },
-    });
-    return;
-  }
-
   const prevEnd = addDays(start, -1);
   const prevStart = addDays(start, -days);
+
+  if (String(req.userRole || '').toLowerCase() === 'admintest') {
+    res.json(buildEmptyOverviewResponse({ label, start, end, prevStart, prevEnd, days }));
+    return;
+  }
 
   const whereCurrent: any = {
     tenantId: req.tenantId!,
@@ -233,6 +243,11 @@ export const getDashboardOverview = async (req: TenantRequest, res: Response) =>
       _max: { date: true, updatedAt: true },
     }),
   ]);
+
+  if (!curMetaAgg?._min?.date) {
+    res.json(buildEmptyOverviewResponse({ label, start, end, prevStart, prevEnd, days }));
+    return;
+  }
 
   const cur = {
     impressions: curAgg._sum.impressions ?? 0,

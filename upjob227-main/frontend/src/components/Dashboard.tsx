@@ -4,7 +4,7 @@ import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { useMetrics, useCampaigns } from '../hooks/useApi';
 import { useOverviewData } from '../hooks/useOverviewData';
-import { getIntegrations, updateIntegration, getMetricsPlatformBreakdown, getCrmLeads, getCommerceOverview, getTrendDashboard, getSeoDashboard, getProductPerformance, getReports, createReport, getCampaignInsights, getTrialStatus, testIntegration } from '../services/api';
+import { getIntegrations, updateIntegration, getCrmLeads, getCommerceOverview, getTrendDashboard, getSeoDashboard, getProductPerformance, getReports, createReport, getCampaignInsights, getTrialStatus, testIntegration } from '../services/api';
 import { useIntegrationNotifications } from '../hooks/useIntegrationNotifications';
 import { Integration, IntegrationNotification } from '../types/api';
 import api from '../services/api';
@@ -49,7 +49,7 @@ import {
   Printer,
   Download,
 } from 'lucide-react';
-import { MetricsLineChart, MetricsBarChart, PlatformPieChart, ChartDatum } from './Charts';
+import { MetricsLineChart, MetricsBarChart, ChartDatum } from './Charts';
 import {
   ResponsiveContainer,
   BarChart,
@@ -5594,70 +5594,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
   const [headerSearch, setHeaderSearch] = useState('');
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [themeIndex, setThemeIndex] = useState(0);
-
-  const [platformRevenueBreakdown, setPlatformRevenueBreakdown] = useState<Array<{ name: string; value: number }>>([]);
-  const [platformRevenueLoading, setPlatformRevenueLoading] = useState(false);
-  const [platformRevenueError, setPlatformRevenueError] = useState<string | null>(null);
   const themePresets = [
     { theme: 'Sunset', accentColor: '#f97316', menuColor: '#1a1612' },
     { theme: 'Midnight', accentColor: '#6366f1', menuColor: '#0f172a' },
     { theme: 'Emerald', accentColor: '#10b981', menuColor: '#022c22' },
   ];
-
-  const platformBreakdownParams = useMemo(() => {
-    if (calendarSelection.start && calendarSelection.end) {
-      return { startDate: calendarSelection.start, endDate: calendarSelection.end };
-    }
-
-    if (globalDateRange === 'custom' && customDateRange.start && customDateRange.end) {
-      return { startDate: customDateRange.start, endDate: customDateRange.end };
-    }
-
-    const period =
-      globalDateRange === '1d'
-        ? '24h'
-        : globalDateRange === '7d'
-          ? '7d'
-          : globalDateRange === '30d'
-            ? '30d'
-            : globalDateRange === '90d'
-              ? '90d'
-              : '365d';
-
-    return { period };
-  }, [calendarSelection.end, calendarSelection.start, customDateRange.end, customDateRange.start, globalDateRange]);
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        setPlatformRevenueLoading(true);
-        setPlatformRevenueError(null);
-
-        const rows = await getMetricsPlatformBreakdown(platformBreakdownParams as any);
-        if (cancelled) return;
-
-        const mapped = (Array.isArray(rows) ? rows : [])
-          .map((row) => ({
-            name: String((row as any)?.platform ?? '').toUpperCase(),
-            value: Number((row as any)?.revenue ?? 0),
-          }))
-          .filter((row) => row.name && Number.isFinite(row.value) && row.value > 0);
-
-        setPlatformRevenueBreakdown(mapped);
-      } catch (err: unknown) {
-        if (cancelled) return;
-        setPlatformRevenueError(getErrorMessage(err, 'Failed to load platform breakdown'));
-        setPlatformRevenueBreakdown([]);
-      } finally {
-        if (!cancelled) setPlatformRevenueLoading(false);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [platformBreakdownParams]);
 
   const applyTheme = useCallback((theme: 'Light' | 'Dark') => {
     setSettingsData((prev) => ({
@@ -7019,9 +6960,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
             data={overviewData}
             meta={overviewMeta}
             loading={overviewLoading}
-            platformRevenueBreakdown={platformRevenueBreakdown}
-            platformRevenueLoading={platformRevenueLoading}
-            platformRevenueError={platformRevenueError}
 
             // UI/Theme Props
             themePanelClass={themePanelClass}
@@ -7036,7 +6974,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
             FunnelVisualizer={FunnelVisualizer}
             ConversionPlatformBars={ConversionPlatformBars}
             LtvComparisonChart={LtvComparisonChart}
-            PlatformPieChart={PlatformPieChart}
 
             // Interaction Handlers
             compareMode={compareMode}
